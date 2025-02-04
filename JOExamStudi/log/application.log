@@ -1,0 +1,5 @@
+2024-10-09T06:46:49.114+02:00  WARN 10524 --- [JOExamStudi] [HikariPool-1 housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=14h34m1s427ms577µs700ns).
+2024-10-09T06:53:42.403+02:00  INFO 10524 --- [JOExamStudi] [RMI TCP Connection(48)-127.0.0.1] inMXBeanRegistrar$SpringApplicationAdmin : Application shutdown requested.
+2024-10-09T06:53:42.415+02:00  INFO 10524 --- [JOExamStudi] [RMI TCP Connection(48)-127.0.0.1] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2024-10-09T06:53:42.418+02:00  INFO 10524 --- [JOExamStudi] [RMI TCP Connection(48)-127.0.0.1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2024-10-09T06:53:42.422+02:00  INFO 10524 --- [JOExamStudi] [RMI TCP Connection(48)-127.0.0.1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
