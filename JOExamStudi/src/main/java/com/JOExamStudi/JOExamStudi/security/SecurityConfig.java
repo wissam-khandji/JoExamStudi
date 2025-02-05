@@ -38,7 +38,7 @@ public class SecurityConfig {
         // Configuration de l'accès et du type d'authentification
         http.csrf().disable()
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**", "/api/qrcode/**").permitAll()
                 .anyRequest().authenticated())
             .httpBasic();
         
