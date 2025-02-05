@@ -5,6 +5,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.OneToOne;
 
 @Entity
@@ -19,6 +20,7 @@ public class Ticket {
 
     private String ticketKey;
     private String secuKey;
+    @Lob
     private String qrCode;
     private String status;
 

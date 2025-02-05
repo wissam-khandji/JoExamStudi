@@ -68,6 +68,13 @@
 		    <artifactId>javase</artifactId>
 		    <version>3.5.1</version>
 		</dependency>
+		<!-- Stripe payment-->
+		<dependency>
+		    <groupId>com.stripe</groupId>
+		    <artifactId>stripe-java</artifactId>
+		    <version>23.5.0</version>
+		</dependency>
+
 
     </dependencies>
 

@@ -5,8 +5,10 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import com.JOExamStudi.JOExamStudi.entity.Cart;
 import com.JOExamStudi.JOExamStudi.entity.Event;
 import com.JOExamStudi.JOExamStudi.entity.User;
+import com.JOExamStudi.JOExamStudi.repository.CartRepository;
 import com.JOExamStudi.JOExamStudi.repository.EventRepository;
 import com.JOExamStudi.JOExamStudi.repository.UserRepository;
 
@@ -20,33 +22,36 @@ public class DataInitializer implements CommandLineRunner {
     private EventRepository eventRepository;
     
     @Autowired
+    private CartRepository cartRepository;
+    
+    @Autowired
     private PasswordEncoder passwordEncoder;
     
     @Override
     public void run(String... args) throws Exception {
-        // Création de l'admin si inexistant
-        if(userRepository.findByEmail("admin@example.com").isEmpty()){
-            User admin = new User();
-            admin.setName("Admin");
-            admin.setLastname("User");
-            admin.setEmail("admin@example.com");
-            admin.setPassword(passwordEncoder.encode("admin123"));
-            admin.setAccountKey("adminKey123");
-            admin.setRole("ADMIN");
-            userRepository.save(admin);
-        }
+        // Création de l'admin si inexistant et récupération dans une variable
+        User admin = userRepository.findByEmail("admin@example.com").orElseGet(() -> {
+            User u = new User();
+            u.setName("Admin");
+            u.setLastname("User");
+            u.setEmail("admin@example.com");
+            u.setPassword(passwordEncoder.encode("admin123"));
+            u.setAccountKey("adminKey123");
+            u.setRole("ADMIN");
+            return userRepository.save(u);
+        });
         
-        // Création d'un utilisateur classique si inexistant
-        if(userRepository.findByEmail("user@example.com").isEmpty()){
-            User user = new User();
-            user.setName("Regular");
-            user.setLastname("User");
-            user.setEmail("user@example.com");
-            user.setPassword(passwordEncoder.encode("user123"));
-            user.setAccountKey("userKey123");
-            user.setRole("USER");
-            userRepository.save(user);
-        }
+        // Création d'un utilisateur classique si inexistant et récupération dans une variable
+        User regularUser = userRepository.findByEmail("user@example.com").orElseGet(() -> {
+            User u = new User();
+            u.setName("Regular");
+            u.setLastname("User");
+            u.setEmail("user@example.com");
+            u.setPassword(passwordEncoder.encode("user123"));
+            u.setAccountKey("userKey123");
+            u.setRole("USER");
+            return userRepository.save(u);
+        });
         
         // Création d'un événement factice
         Event event = new Event();
@@ -57,6 +62,15 @@ public class DataInitializer implements CommandLineRunner {
         event.setTime("18:00");
         event.setDate("2024-07-26");
         eventRepository.save(event);
+        
+        // Création d'un panier de test associé à l'utilisateur régulier, si aucun panier n'existe déjà
+        if(cartRepository.findAll().isEmpty()){
+            Cart cart = new Cart();
+            cart.setUser(regularUser); // Utilise l'utilisateur régulier
+            cart.setQuantity(1);
+            cart.setTotalPrice(5000);
+            cart.setStatus("NEW");
+            cartRepository.save(cart);
+        }
     }
 }
-
