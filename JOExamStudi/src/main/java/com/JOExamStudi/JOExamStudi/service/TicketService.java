@@ -8,11 +8,11 @@ import com.JOExamStudi.JOExamStudi.repository.TicketRepository;
 import com.google.zxing.WriterException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.Optional;
 
 @Service
 public class TicketService {
@@ -29,28 +29,32 @@ public class TicketService {
     // Génère une clé aléatoire pour le paiement
     private String generatePaymentKey() {
         SecureRandom random = new SecureRandom();
-        return new BigInteger(130, random).toString(32); // chaine alphanumérique aléatoire
+        return new BigInteger(130, random).toString(32); // Chaîne alphanumérique aléatoire
     }
 
     /**
      * Finalise la création du billet :
-     *  - Récupère le panier et l'utilisateur associé pour obtenir accountKey.
-     *  - Génère une paymentKey.
-     *  - Concatène accountKey et paymentKey pour obtenir la clé finale.
-     *  - Génère un QR code (image PNG encodée en Base64) à partir de la clé finale.
-     *  - Crée et sauvegarde le Ticket.
+     * - Récupère le panier et l'utilisateur associé pour obtenir accountKey.
+     * - Vérifie si un ticket existe déjà pour ce panier. Si oui, on le met à jour ; sinon, on crée un nouveau ticket.
+     * - Génère une paymentKey.
+     * - Concatène accountKey et paymentKey pour obtenir la clé finale (secuKey).
+     * - Génère un QR code à partir de la clé finale et l'encode en Base64.
+     * - Sauvegarde (ou met à jour) le Ticket.
      *
-     * @param cartId l'identifiant du panier associé à la commande.
-     * @return le Ticket créé.
-     * @throws Exception en cas d'erreur (panier non trouvé, erreur QR code, etc.).
+     * @param cartId l'identifiant du panier.
+     * @return le Ticket finalisé.
+     * @throws Exception si le panier n'est pas trouvé ou en cas d'erreur de génération.
      */
     public Ticket finalizeTicket(Long cartId) throws Exception {
-        // Récupération du panier
+        // Récupère le panier
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new Exception("Panier introuvable"));
 
-        // Récupération de la clé de compte de l'utilisateur
+        // Récupère l'utilisateur associé
         User user = cart.getUser();
+        if (user == null) {
+            throw new Exception("Le panier n'a pas d'utilisateur associé");
+        }
         String accountKey = user.getAccountKey();
 
         // Génération de la clé de paiement
@@ -59,18 +63,29 @@ public class TicketService {
         // Concaténation pour obtenir la clé finale
         String finalKey = accountKey + paymentKey;
 
-        // Génération du QR code à partir de la clé finale
+        // Génération du QR code (image PNG encodée en Base64)
         byte[] qrCodeImage = qrCodeGeneratorService.generateQRCodeImage(finalKey, 200, 200);
-        // Encodage en Base64 pour stockage en String
         String qrCodeBase64 = Base64.getEncoder().encodeToString(qrCodeImage);
 
-        // Création du billet (Ticket)
-        Ticket ticket = new Ticket();
-        ticket.setCart(cart);
-        ticket.setTicketKey(paymentKey);  // clé générée lors du paiement
-        ticket.setSecuKey(finalKey);       // clé finale (accountKey + paymentKey)
-        ticket.setQrCode(qrCodeBase64);     // QR code encodé en Base64
-        ticket.setStatus("VALID");
+        // Vérifie si un ticket existe déjà pour ce panier
+        Optional<Ticket> optionalTicket = ticketRepository.findByCart(cart);
+        Ticket ticket;
+        if (optionalTicket.isPresent()) {
+            ticket = optionalTicket.get();
+            // Mise à jour du ticket existant
+            ticket.setTicketKey(paymentKey);
+            ticket.setSecuKey(finalKey);
+            ticket.setQrCode(qrCodeBase64);
+            ticket.setStatus("VALID");
+        } else {
+            // Création d'un nouveau ticket
+            ticket = new Ticket();
+            ticket.setCart(cart);
+            ticket.setTicketKey(paymentKey);
+            ticket.setSecuKey(finalKey);
+            ticket.setQrCode(qrCodeBase64);
+            ticket.setStatus("VALID");
+        }
 
         return ticketRepository.save(ticket);
     }
