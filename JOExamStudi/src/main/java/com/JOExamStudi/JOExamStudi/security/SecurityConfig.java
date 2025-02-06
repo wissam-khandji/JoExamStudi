@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -12,6 +13,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true) // Pour activer @PreAuthorize
 public class SecurityConfig {
 
     @Autowired
@@ -35,10 +37,12 @@ public class SecurityConfig {
         // Ajoute le provider d'authentification
         http.authenticationProvider(authenticationProvider());
 
-        // Configuration de l'accès et du type d'authentification
         http.csrf().disable()
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**", "/api/qrcode/**").permitAll()
+                .requestMatchers("/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**", "/api/qrcode/**")
+                    .permitAll()
+                .requestMatchers("/api/admin/**")
+                    .hasRole("ADMIN")
                 .anyRequest().authenticated())
             .httpBasic();
         
